@@ -1,0 +1,91 @@
+%% Technical Analysis Signal Scanner - Local v1 Architecture
+%% 3-tier client-server architecture with hexagonal-lite service isolation
+%% Render: VS Code (Mermaid Preview extension), GitHub native, or mermaid.live
+
+flowchart TB
+    subgraph BROWSER["🌐 BROWSER (Chromium - Chrome / Brave)<br/>http://127.0.0.1:8000"]
+        direction LR
+        UI_DASH["<b>Dashboard</b><br/>Posture cards<br/>Indicator table<br/>Plotly charts"]
+        UI_CFG["<b>Ticker Config</b><br/>Add / remove tickers<br/>Edit thresholds<br/>Leveraged ETF flag"]
+        UI_HIST["<b>Run History</b><br/>Posture time series<br/>Per-ticker evolution"]
+    end
+
+    subgraph APP["⚙️ FASTAPI APPLICATION (uvicorn, localhost only)"]
+        direction TB
+
+        subgraph WEB["WEB LAYER (thin HTTP wrappers)"]
+            ROUTE_DASH["routes/dashboard.py"]
+            ROUTE_TICK["routes/tickers.py"]
+            ROUTE_RUN["routes/runs.py"]
+        end
+
+        subgraph SVC["SERVICE LAYER (pure Python, no framework deps)"]
+            direction LR
+            SVC_IND["<b>Indicators</b><br/>SMA 50/200<br/>RSI-14<br/>HV-20<br/>52w range<br/>Crossovers"]
+            SVC_SCORE["<b>Scoring</b><br/>Posture score<br/>Threshold<br/>comparison"]
+            SVC_ORCH["<b>Run Orchestrator</b><br/>Fetch tickers<br/>Compute indicators<br/>Score postures<br/>Persist run<br/>Staleness check"]
+        end
+
+        subgraph DAL["DATA ACCESS LAYER (SQLAlchemy repositories)"]
+            REPO_TICK["TickerRepo"]
+            REPO_PRICE["PriceHistoryRepo"]
+            REPO_RUN["RunHistoryRepo"]
+            REPO_THRESH["ThresholdsRepo"]
+        end
+
+        ADAPTER["<b>YahooFinanceClient</b><br/>(anti-corruption wrapper<br/>around yfinance library)"]
+
+        SCHED["<b>APScheduler</b> (in-process)<br/>Startup staleness check<br/>Daily EOD trigger (if running)"]
+    end
+
+    subgraph STORAGE["💾 PERSISTENCE"]
+        SQLITE[("<b>SQLite</b><br/>./data/app.db<br/><br/>watchlist<br/>price_history (∞)<br/>ticker_thresholds<br/>leveraged_etf_defaults<br/>run_history (18mo)")]
+    end
+
+    subgraph EXTERNAL["🌍 EXTERNAL"]
+        YAHOO[("<b>Yahoo Finance</b><br/>via yfinance library<br/>Rate-limited, unofficial")]
+    end
+
+    %% Connections
+    UI_DASH -.HTTP.-> ROUTE_DASH
+    UI_CFG -.HTTP.-> ROUTE_TICK
+    UI_HIST -.HTTP.-> ROUTE_RUN
+
+    ROUTE_DASH --> SVC_ORCH
+    ROUTE_TICK --> SVC_ORCH
+    ROUTE_RUN --> SVC_ORCH
+    ROUTE_DASH --> SVC_IND
+    ROUTE_TICK --> SVC_SCORE
+
+    SVC_ORCH --> SVC_IND
+    SVC_ORCH --> SVC_SCORE
+    SVC_ORCH --> ADAPTER
+    SVC_ORCH --> REPO_TICK
+    SVC_ORCH --> REPO_PRICE
+    SVC_ORCH --> REPO_RUN
+    SVC_SCORE --> REPO_THRESH
+
+    REPO_TICK --> SQLITE
+    REPO_PRICE --> SQLITE
+    REPO_RUN --> SQLITE
+    REPO_THRESH --> SQLITE
+
+    ADAPTER --> YAHOO
+    SCHED --> SVC_ORCH
+
+    %% Styling
+    classDef browser fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
+    classDef web fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
+    classDef service fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#000
+    classDef data fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    classDef external fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+    classDef storage fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
+    classDef infra fill:#f5f5f5,stroke:#616161,stroke-width:2px,color:#000
+
+    class UI_DASH,UI_CFG,UI_HIST browser
+    class ROUTE_DASH,ROUTE_TICK,ROUTE_RUN web
+    class SVC_IND,SVC_SCORE,SVC_ORCH service
+    class REPO_TICK,REPO_PRICE,REPO_RUN,REPO_THRESH data
+    class ADAPTER,YAHOO external
+    class SQLITE storage
+    class SCHED infra
