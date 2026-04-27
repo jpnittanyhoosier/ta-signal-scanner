@@ -1,0 +1,140 @@
+# =============================================================================
+# .gitignore for ta-signal-scanner
+# =============================================================================
+# Sections:
+#   1. Project-specific runtime data
+#   2. Python build/cache artifacts
+#   3. Virtual environment / Conda
+#   4. Test and tooling caches
+#   5. IDE and editor
+#   6. OS-generated files
+#   7. Secrets and local config
+# =============================================================================
+
+
+# 1. Project-specific runtime data
+# -----------------------------------------------------------------------------
+# The SQLite database file lives in data/ at runtime but is never committed.
+# The data/ directory itself IS tracked, via data/.gitkeep.
+data/*.db
+data/*.db-journal
+data/*.sqlite
+data/*.sqlite3
+!data/.gitkeep
+
+# Application logs (if we add file logging later)
+*.log
+logs/
+
+
+# 2. Python build/cache artifacts
+# -----------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+wheels/
+*.whl
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+
+# 3. Virtual environment / Conda
+# -----------------------------------------------------------------------------
+# Standard venv directories (in case anyone uses venv instead of conda)
+.venv/
+venv/
+env/
+ENV/
+
+# Conda environment files (if exported locally for reference, not for project use)
+# Note: we do NOT commit environment.yml because we use pyproject.toml as
+# the single source of truth for dependencies.
+environment.yml
+environment.lock.yml
+
+
+# 4. Test and tooling caches
+# -----------------------------------------------------------------------------
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+
+# 5. IDE and editor
+# -----------------------------------------------------------------------------
+# VS Code
+.vscode/
+# Note: some teams commit a .vscode/ with project-wide settings (recommended
+# extensions, debug configs). For v1 we keep it local. If we later want shared
+# settings, we'd un-ignore .vscode/settings.json and .vscode/extensions.json
+# specifically.
+
+# JetBrains (PyCharm, etc.)
+.idea/
+*.iml
+
+# Sublime
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+
+# 6. OS-generated files
+# -----------------------------------------------------------------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+
+# 7. Secrets and local config
+# -----------------------------------------------------------------------------
+# Real environment files are never committed. Only .env.example is tracked.
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# AWS credentials (in case we accidentally drop a profile here during AWS phase)
+.aws/
+*.pem
+*.key
