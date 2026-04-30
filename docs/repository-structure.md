@@ -13,6 +13,7 @@ This document describes the target top-level layout of the `ta-signal-scanner` r
 ```
 ta-signal-scanner/
 ├── app/                        # Application source code (Python package)
+|   ├── __init__.py
 ├── tests/                      # Test suite, mirrors app/ structure
 ├── data/                       # Runtime data directory (SQLite db lives here)
 │   └── .gitkeep                # Placeholder so the empty directory is tracked
@@ -45,6 +46,8 @@ ta-signal-scanner/
 ### `app/`
 The runnable application. All FastAPI code, service layer, data access layer, and the Yahoo Finance adapter live here. Internal organization (web/service/dal/adapters subfolders) will be specified in a future thread once we design the first models and routes.
 
+Contains a top-level `__init__.py` that marks the directory as a Python package. Required by mypy, IDEs, and pytest's import resolution. Future subdirectories under `app/` will each need their own `__init__.py` for the same reason.
+
 ### `tests/`
 Pytest test suite. Mirrors the structure of `app/` so that finding the test for a given module is mechanical. Kept outside `app/` so test code is never accidentally shipped or imported by the running application.
 
@@ -76,6 +79,8 @@ Template file showing which environment variables the application reads, with pl
 
 ### `pyproject.toml`
 Single source of truth for: project metadata (name, version, description), runtime and development dependencies, and configuration for `pytest`, `ruff`, and `mypy`. Replaces the older pattern of separate `setup.py`, `requirements.txt`, `pytest.ini`, etc.
+
+Includes an explicit `[tool.hatch.build.targets.wheel]` block declaring `packages = app/` This is required because hatchling's automatic package discovery does not find a directory whose name does not match the project name - and we deliberately chose `app/` over `ta_signal_scanner/` (see ADR 0002). The explicit configuration replaces the heuristic that would otherwise apply.
 
 ### `README.md`
 First impression of the project for any reader (including future-you). Should contain: one-paragraph project description, prerequisites, quickstart (clone / install / run), and pointers to the `docs/` directory for deeper reading. Will be expanded as the project matures.

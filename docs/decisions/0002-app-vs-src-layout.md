@@ -63,6 +63,8 @@ Place the application code at the repository root in a directory matching the pr
 
 - Diverges from the modern PyPA-recommended src layout. A Python packaging purist may flag this as non-idiomatic.
 - The accidental-import risk exists in theory. Mitigated by always running the app through `uvicorn` and tests through `pytest`, never by `python app/main.py` from inside the directory.
+- *(Discovered during setup, 2026-04-27.)* Hactchling's automatic package discovery does not find `app/` because its primary heuristic looks for a directory matching the project name (`ta_signal_scanner/`). Requires an explicit `[tool.hatch.build.targets.wheel] packages = ["app/"]` block in `pyproject.toml`. Three lines of additional config; not a meaningful cost, but a real consequence of the directory naming choice that was not anticipated when this ADR was written.
+- *(Discovered during setup, 2026-04-27.)* An `app/__init__.py` file must be present to mark the directory as a Python package. This file is conventionally desireable independent of the build system (mypy, IDEs, and pytest's import resolution all benefit from its presence), so it is not strictly a consequence of the `app/` choice - but it is a file we must remember to create rather than one some tooling will create for us.
 
 ### Follow-up Required
 
