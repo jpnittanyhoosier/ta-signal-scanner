@@ -14,6 +14,9 @@ This document describes the target top-level layout of the `ta-signal-scanner` r
 ta-signal-scanner/
 ├── app/                        # Application source code (Python package)
 |   ├── __init__.py
+│   └── dal/                    # Data Access Layer (per ADR 0008)
+│       ├── __init__.py
+│       └── database.py         # Engine, Base, SessionLocal — single point of access for SQLAlchemy
 ├── tests/                      # Test suite, mirrors app/ structure
 ├── data/                       # Runtime data directory (SQLite db lives here)
 │   └── .gitkeep                # Placeholder so the empty directory is tracked
