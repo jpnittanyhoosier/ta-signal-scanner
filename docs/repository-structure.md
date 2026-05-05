@@ -1,10 +1,10 @@
 # Repository Structure
 
 **Project:** Technical Analysis Signal Scanner
-**Status:** Target structure for v1 local implementation
-**Date:** April 21, 2026
+**Status:** Current state of the repository (updated as structure changes)
+**Date:** May 4, 2026
 
-This document describes the target top-level layout of the `ta-signal-scanner` repository. It is a reference for initial repo setup and future onboarding. The internal structure of `app/` will be specified separately once the first models and routes are designed.
+This document describes the current top-level layout of the `ta-signal-scanner` repository. It is updated as part of commit hygiene whenever directories or files are added, removed, or rearranged. The internal organization of `app/` follows the layered structure decided in ADR 0008.
 
 ---
 
@@ -13,7 +13,7 @@ This document describes the target top-level layout of the `ta-signal-scanner` r
 ```
 ta-signal-scanner/
 ├── app/                        # Application source code (Python package)
-|   ├── __init__.py
+│   ├── __init__.py
 │   └── dal/                    # Data Access Layer (per ADR 0008)
 │       ├── __init__.py
 │       └── database.py         # Engine, Base, SessionLocal — single point of access for SQLAlchemy
@@ -24,6 +24,8 @@ ta-signal-scanner/
 ├── docs/                       # Project documentation
 │   ├── architecture-design.md
 │   ├── architecture-diagram.mmd
+│   ├── repository-structure.md # (this file)
+│   ├── development-plan.md
 │   └── decisions/              # Architecture Decision Records (ADRs)
 │       ├── README.md           # ADR index
 │       ├── 0001-repository-layout.md
@@ -32,7 +34,8 @@ ta-signal-scanner/
 │       ├── 0004-dependency-pinning-strategy.md
 │       ├── 0005-dev-tooling-selection.md
 │       ├── 0006-mypy-lenient-configuration.md
-│       └── 0007-defer-alembic-precommit.md
+│       ├── 0007-defer-alembic-precommit.md
+│       └── 0008-internal-app-layout.md
 ├── .github/                    # GitHub-specific config (CI workflows, templates)
 ├── .gitignore                  # Files/directories Git should ignore
 ├── .python-version             # Python version pin (read by pyenv and similar tools)
@@ -42,14 +45,21 @@ ta-signal-scanner/
 └── LICENSE                     # MIT license (created on GitHub during repo setup)
 ```
 
+ADR 0008 specifies the full *intended* internal layout of `app/`. The tree above shows only what currently exists; further subdirectories (`web/`, `services/`, `adapters/`, `infra/`) will appear as the milestones in `development-plan.md` create files that need them (lazy-creation policy per ADR 0008).
+
 ---
 
 ## Folder and File Purposes
 
 ### `app/`
-The runnable application. All FastAPI code, service layer, data access layer, and the Yahoo Finance adapter live here. Internal organization (web/service/dal/adapters subfolders) will be specified in a future thread once we design the first models and routes.
+The runnable application. All FastAPI code, service layer, data access layer, and the Yahoo Finance adapter live here. Internal organization follows the layered subdirectory structure decided in ADR 0008 — one subdirectory per architectural ring (web / services / dal / adapters / infra).
 
-Contains a top-level `__init__.py` that marks the directory as a Python package. Required by mypy, IDEs, and pytest's import resolution. Future subdirectories under `app/` will each need their own `__init__.py` for the same reason.
+Contains a top-level `__init__.py` that marks the directory as a Python package. Required by mypy, IDEs, and pytest's import resolution. Each subdirectory under `app/` has its own `__init__.py` for the same reason.
+
+### `app/dal/`
+Data Access Layer. Owns the SQLAlchemy infrastructure (`database.py`), the ORM models, the seed-data loader, and the repository classes. This is the only directory that imports SQLAlchemy directly; service-layer code consumes the DAL through repository methods.
+
+Currently contains `database.py`, which is the single point of access for the engine, the declarative `Base` class, and the `SessionLocal` session factory.
 
 ### `tests/`
 Pytest test suite. Mirrors the structure of `app/` so that finding the test for a given module is mechanical. Kept outside `app/` so test code is never accidentally shipped or imported by the running application.
